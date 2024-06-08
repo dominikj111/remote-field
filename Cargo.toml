@@ -1,0 +1,8 @@
+[workspace]
+resolver = "2"
+members = [
+    "common",
+    "apps/bloom_2d",
+    "apps/mesh_2d",
+    "entrypoint",
+]

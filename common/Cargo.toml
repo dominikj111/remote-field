@@ -1,0 +1,22 @@
+[package]
+name = "common"
+version = "0.1.0"
+edition = "2021"
+
+[package.metadata.clippy]
+# List of lints to allow, in addition to those allowed by default
+# (optional)
+allow = ["clippy::needless_return", "clippy::redundant_field_names"]
+# List of lints to deny (optional)
+deny = ["clippy::all"]
+# List of lints to warn about (optional)
+warn = ["clippy::pedantic"]
+# List of lints to allow in tests (optional)
+# (this overrides 'allow' and 'deny' for tests)
+allow_tests = ["clippy::result_unwrap_used"]
+# List of lints to deny in tests (optional)
+# (this overrides 'allow' and 'deny' for tests)
+deny_tests = ["clippy::panic"]
+# Additional arguments to pass to clippy (optional)
+# (these override the defaults, so be careful)
+args = ["-D", "warnings", "--cap-lints", "warn"]
