@@ -13,7 +13,7 @@ mod prelude {
     pub use std::io::Result;
 }
 
-use crate::model::tags::{BoardItem, SharedData};
+use crate::model::tags::BoardItem;
 pub use crate::model::{Board, Entity, Float64Value};
 pub use std::io::{ErrorKind, Result};
 
@@ -25,37 +25,9 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-fn start_unix_socket_handler(tx: Sender<String>) {
-    thread::spawn(move || {
-        let unix_listener = UnixListener::bind("/tmp/rust_bevy_mesh_2d").unwrap();
-        let (mut unix_stream, socket_address) = unix_listener.accept().unwrap();
-        let mut message = String::new();
-        unix_stream.read_to_string(&mut message);
-        tx.send(message).unwrap();
+const SOCKET_FILE: &str = "/tmp/remote-field.sock";
 
-        // for stream in listener.incoming() {
-        //     match stream {
-        //         Ok(mut stream) => {
-        //             let mut buffer = [0; 512];
-        //             stream.read(&mut buffer).unwrap();
-        //             let data = String::from_utf8_lossy(&buffer).to_string();
-        //             tx.send(data).unwrap();
-        //         }
-        //         Err(err) => {
-        //             eprintln!("Failed to receive a connection: {}", err);
-        //         }
-        //     }
-        // }
-    });
-}
-
-// use std::sync::{Arc, Mutex};
-// use std::sync::mpsc::Receiver;
-
-#[derive(Resource)]
-struct SocketReceiver(Mutex<Receiver<String>>);
-
-pub fn main() {
+fn set_custom_panic_hook() {
     let default_panic = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |info| {
         // Do some reaction for panicked application just here,
@@ -63,24 +35,44 @@ pub fn main() {
         error!("Application panicked!");
         default_panic(info);
     }));
+}
 
+fn start_unix_socket_handler() -> Receiver<String> {
     let (tx, rx): (Sender<String>, Receiver<String>) = mpsc::channel();
 
-    // Start the Unix socket handler in a separate thread
-    start_unix_socket_handler(tx);
+    thread::spawn(move || {
+        match std::fs::remove_file(SOCKET_FILE) {
+            Ok(_) => {}
+            Err(_) => {}
+        }
 
-    // let shared_data = Arc::new(Mutex::new(Vec::new()));
-    // let shared_data_for_bevy = shared_data.clone();
+        let unix_listener = UnixListener::bind(SOCKET_FILE).unwrap();
 
+        loop {
+            let (mut unix_stream, _socket_address) = unix_listener.accept().unwrap();
+            let mut message = String::new();
+            unix_stream.read_to_string(&mut message).unwrap();
+            tx.send(message).unwrap();
+        }
+    });
+
+    rx
+}
+
+#[derive(Resource)]
+struct SocketReceiver(Mutex<Receiver<String>>);
+
+pub fn main() {
+    set_custom_panic_hook();
+    let rx = start_unix_socket_handler();
     App::new()
-        .insert_resource(SharedData(Arc::new(Mutex::new(Vec::new()))))
         .insert_resource(SocketReceiver(Mutex::new(rx)))
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, setup.pipe(error_handler))
-        .add_systems(First, process_unix_socket_data.pipe(error_handler))
-        .add_systems(PreUpdate, keyboard_event_system.pipe(error_handler))
-        .add_systems(Update, update_colours_system.pipe(error_handler))
-        .add_systems(PostUpdate, panic_system_test.pipe(error_handler))
+        .add_systems(FixedFirst, process_unix_socket_data.pipe(error_handler))
+        .add_systems(FixedPreUpdate, keyboard_event_system.pipe(error_handler))
+        .add_systems(FixedUpdate, update_colours_system.pipe(error_handler))
+        .add_systems(FixedPostUpdate, panic_system_test.pipe(error_handler))
         .run();
 }
 
@@ -139,20 +131,11 @@ fn setup(
 
 fn process_unix_socket_data(
     mut state: ResMut<crate::state::State>,
-    mut shared_data: ResMut<SharedData>,
     rx: Res<SocketReceiver>,
 ) -> Result<()> {
     if let Ok(data) = rx.0.lock().unwrap().try_recv() {
-        let mut shared_data = shared_data.0.lock().unwrap();
-        shared_data.push(data);
+        println!("received: {}", data);
     }
 
     Ok(())
 }
-
-// fn use_shared_data(shared_data: Res<SharedData>) {
-//     let shared_data = shared_data.0.lock().unwrap();
-//     for data in shared_data.iter() {
-//         println!("Received data: {}", data);
-//     }
-// }
