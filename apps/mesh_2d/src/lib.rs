@@ -19,7 +19,8 @@ pub use std::io::{ErrorKind, Result};
 
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
-use std::io::prelude::*;
+use std::io::{prelude::*, BufReader};
+use std::net::{TcpListener, TcpStream};
 use std::os::unix::net::UnixListener;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::sync::{Arc, Mutex};
@@ -59,17 +60,41 @@ fn start_unix_socket_handler() -> Receiver<String> {
     rx
 }
 
+fn start_web_server() -> Receiver<String> {
+    let (tx, rx): (Sender<String>, Receiver<String>) = mpsc::channel();
+    thread::spawn(move || {
+        let http_listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+        for stream in http_listener.incoming() {
+            match stream {
+                Ok(stream) => {
+                    let command = handle_connection(stream);
+                    tx.send(command).unwrap();
+                }
+                Err(_) => {}
+            }
+        }
+    });
+
+    rx
+}
+
 #[derive(Resource)]
 struct SocketReceiver(Mutex<Receiver<String>>);
+
+#[derive(Resource)]
+struct HttpReceiver(Mutex<Receiver<String>>);
 
 pub fn main() {
     set_custom_panic_hook();
     let rx = start_unix_socket_handler();
+    let rx2 = start_web_server();
     App::new()
         .insert_resource(SocketReceiver(Mutex::new(rx)))
+        .insert_resource(HttpReceiver(Mutex::new(rx2)))
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, setup.pipe(error_handler))
         .add_systems(FixedFirst, process_unix_socket_data.pipe(error_handler))
+        .add_systems(FixedFirst, process_http_data.pipe(error_handler))
         .add_systems(FixedPreUpdate, keyboard_event_system.pipe(error_handler))
         .add_systems(FixedUpdate, update_colours_system.pipe(error_handler))
         .add_systems(FixedPostUpdate, panic_system_test.pipe(error_handler))
@@ -134,8 +159,46 @@ fn process_unix_socket_data(
     rx: Res<SocketReceiver>,
 ) -> Result<()> {
     if let Ok(data) = rx.0.lock().unwrap().try_recv() {
-        println!("received: {}", data);
+        println!("unix socket received: {}", data);
     }
 
     Ok(())
+}
+
+fn process_http_data(mut state: ResMut<crate::state::State>, rx: Res<HttpReceiver>) -> Result<()> {
+    if let Ok(data) = rx.0.lock().unwrap().try_recv() {
+        println!("http received: {}", data);
+    }
+
+    Ok(())
+}
+
+fn handle_connection(mut stream: TcpStream) -> String {
+    let buf_reader = BufReader::new(&mut stream);
+    let http_request: Vec<_> = buf_reader
+        .lines()
+        .map(|result| result.unwrap())
+        .take_while(|line| !line.is_empty())
+        .collect();
+
+    let (status_line, filename) = if http_request[0] == "GET / HTTP/1.1" {
+        ("HTTP/1.1 200 OK", "index.html")
+    } else if http_request[0] == "GET /style_guide.html HTTP/1.1" {
+        ("HTTP/1.1 200 OK", "style_guide.html")
+    } else if http_request[0] == "GET /assets/css/font.css HTTP/1.1" {
+        ("HTTP/1.1 200 OK", "assets/css/font.css")
+    } else if http_request[0] == "GET /assets/css/reset.css HTTP/1.1" {
+        ("HTTP/1.1 200 OK", "assets/css/reset.css")
+    } else {
+        ("HTTP/1.1 404 NOT FOUND", "404.html")
+    };
+
+    let contents = std::fs::read_to_string(format!("{}{}", "./apps/mesh_2d/web_admin/dist/", filename)).unwrap();
+    let length = contents.len();
+
+    let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
+
+    stream.write_all(response.as_bytes()).unwrap();
+
+    "WIP".to_string()
 }

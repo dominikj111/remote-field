@@ -28,7 +28,8 @@ export default defineConfig({
         rollupOptions: {
             input: {
                 index: './index.html',
-                style_guide: './style_guide.html'
+                style_guide: './style_guide.html',
+                404: './404.html'
             },
         },
     },
