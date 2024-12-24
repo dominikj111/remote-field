@@ -1,5 +1,7 @@
 # Remote Field Game
 
+**Keywords**: `Bevy Engine`, `Rust`, `2D Graphics`, `Network Control`, `HTTP API`, `Socket Communication`, `Color Field`, `Game Rendering`, `POC`
+
 A proof-of-concept implementation of a color field game built with the Bevy game engine, featuring network control capabilities.
 
 ## Overview
