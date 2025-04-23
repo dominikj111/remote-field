@@ -10,9 +10,6 @@ fn main() {
     println!("{} {}", "Running the:".cyan(), args.appname.bold().cyan());
 
     match args.appname.as_str() {
-        "bloom_2d" => {
-            bloom_2d::main();
-        }
         "mesh_2d" => {
             mesh_2d::main();
         }
