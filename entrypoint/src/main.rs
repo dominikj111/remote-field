@@ -16,6 +16,9 @@ fn main() {
         "mesh_2d" => {
             mesh_2d::main();
         }
+        "renderer" => {
+            renderer::main();
+        }
         _ => panic!("App name {} not implemented yet", args.appname),
     }
 
