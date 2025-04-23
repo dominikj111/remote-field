@@ -25,7 +25,7 @@ This project demonstrates a color field game rendering system with the unique ab
 To run the project:
 
 ```bash
-cargo run -- --appname mesh_2d
+cargo run -- --appname renderer
 ```
 
 ## Features

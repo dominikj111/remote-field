@@ -7,7 +7,6 @@ edition = "2021"
 clap = { version = "4.4.11", features = ["derive"] }
 colored = "3.0.0"
 common = { path = "../common" }
-mesh_2d = { path = "../apps/mesh_2d" }
 renderer = { path = "../apps/renderer" }
 
 [package.metadata.clippy]
