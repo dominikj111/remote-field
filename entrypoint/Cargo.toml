@@ -3,14 +3,6 @@ name = "field_engine"
 version = "0.1.0"
 edition = "2021"
 
-#  Enable a small amount of optimization in debug mode
-[profile.dev]
-opt-level = 1
-
-# Enable high optimizations for dependencies (incl. Bevy), but not for our code:
-[profile.dev.package."*"]
-opt-level = 3
-
 [dependencies]
 clap = { version = "4.4.11", features = ["derive"] }
 colored = "3.0.0"
