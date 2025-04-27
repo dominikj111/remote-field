@@ -18,7 +18,7 @@ use crate::model::tags::BoardItem;
 pub use crate::model::{Board, Entity, Float64Value};
 pub use std::io::{ErrorKind, Result};
 
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::prelude::*;
 
 fn set_custom_panic_hook() {
     let default_panic = std::panic::take_hook();
@@ -57,7 +57,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) -> Result<()> {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2d);
 
     let app_state = state::State::default();
 
@@ -66,14 +66,11 @@ fn setup(
             let material = materials.add(random_color());
 
             commands.spawn((
-                MaterialMesh2dBundle {
-                    mesh: meshes.add(Rectangle::default()).into(),
-                    transform: Transform {
-                        translation: Vec3::new((i * 10) as f32, (j * 10) as f32, 1.),
-                        scale: Vec3::splat(10.),
-                        ..default()
-                    },
-                    material,
+                Mesh2d(meshes.add(Rectangle::default())),
+                MeshMaterial2d(material),
+                Transform {
+                    translation: Vec3::new((i * 10) as f32, (j * 10) as f32, 1.),
+                    scale: Vec3::splat(10.),
                     ..default()
                 },
                 BoardItem,
@@ -83,12 +80,11 @@ fn setup(
 
     commands.insert_resource(app_state);
 
-    commands.spawn(MaterialMesh2dBundle {
-        mesh: meshes.add(Rectangle::default()).into(),
-        transform: Transform::default().with_scale(Vec3::splat(128.)),
-        material: materials.add(Color::from(bevy::color::palettes::basic::PURPLE)),
-        ..default()
-    });
+    commands.spawn((
+        Mesh2d(meshes.add(Rectangle::default())),
+        MeshMaterial2d(materials.add(Color::from(bevy::color::palettes::basic::PURPLE))),
+        Transform::default().with_scale(Vec3::splat(128.)),
+    ));
 
     Ok(())
 }
