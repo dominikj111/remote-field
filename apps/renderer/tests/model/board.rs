@@ -1,4 +1,4 @@
-use bevy::color::Color;
+use bevy::color::{ Color, palettes };
 use renderer::{Board, Entity};
 
 #[test]
@@ -21,7 +21,7 @@ fn maximum_provided_coordinates_defines_the_board_dimension() {
     let mut board = Board::new();
     let entity = Entity::<()> {
         coordinates: (3, 1),
-        color: Color::srgb(0.0, 1.0, 0.0),
+        color: palettes::basic::GREEN.into(),
         ..Default::default()
     };
     assert_eq!(board.dimension(), (0, 0));
@@ -34,17 +34,17 @@ fn allows_to_set_and_get_entities() {
     let mut board = Board::new();
     let entity1 = Entity::<()> {
         coordinates: (1, 1),
-        color: Color::srgb(0.0, 1.0, 0.0),
+        color: palettes::basic::GREEN.into(),
         ..Default::default()
     };
     let entity2 = Entity::<()> {
         coordinates: (1, 2),
-        color: Color::srgb(1.0, 0.0, 0.0),
+        color: palettes::basic::RED.into(),
         ..Default::default()
     };
     let entity3 = Entity::<()> {
         coordinates: (2, 3),
-        color: Color::srgb(0.0, 0.0, 1.0),
+        color: palettes::basic::BLUE.into(),
         ..Default::default()
     };
 
@@ -55,8 +55,8 @@ fn allows_to_set_and_get_entities() {
     board.set(entity3);
 
     assert_eq!(board.get(1, 1), Some(entity1));
-    assert_eq!(board.get(1, 2).unwrap().color, Color::srgb(1.0, 0.0, 0.0));
-    assert_eq!(board.get(2, 3).unwrap().color, Color::srgb(0.0, 0.0, 1.0));
+    assert_eq!(board.get(1, 2).unwrap().color, palettes::basic::RED.into());
+    assert_eq!(board.get(2, 3).unwrap().color, palettes::basic::BLUE.into());
 
     assert_eq!(board.dimension(), (3, 4));
 }
@@ -66,7 +66,7 @@ fn allows_to_clear_entities() {
     let mut board = Board::new();
     let entity1 = Entity::<()> {
         coordinates: (2, 4),
-        color: Color::srgb(0.0, 1.0, 0.0),
+        color: palettes::basic::GREEN.into(),
         ..Default::default()
     };
 
@@ -87,12 +87,12 @@ fn doesnt_override_existing_entities() {
     let mut board = Board::new();
     let entity1 = Entity::<()> {
         coordinates: (1, 1),
-        color: Color::srgb(0.0, 1.0, 0.0),
+        color: palettes::basic::GREEN.into(),
         ..Default::default()
     };
     let entity2 = Entity::<()> {
         coordinates: (1, 1),
-        color: Color::srgb(1.0, 0.0, 0.0),
+        color: palettes::basic::RED.into(),
         ..Default::default()
     };
 
@@ -105,12 +105,12 @@ fn allows_to_override_existing_entities_if_flag_is_set() {
     let mut board = Board::new();
     let entity1 = Entity::<()> {
         coordinates: (1, 1),
-        color: Color::srgb(0.0, 1.0, 0.0),
+        color: palettes::basic::GREEN.into(),
         ..Default::default()
     };
     let entity2 = Entity::<()> {
         coordinates: (1, 1),
-        color: Color::srgb(1.0, 0.0, 0.0),
+        color: palettes::basic::RED.into(),
         ..Default::default()
     };
 

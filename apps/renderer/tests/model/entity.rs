@@ -1,4 +1,4 @@
-use bevy::prelude::Color;
+use bevy::{color::palettes, prelude::Color};
 use renderer::Entity;
 
 #[test]
@@ -13,8 +13,8 @@ fn has_new_and_default() {
     let entity2: Entity<()> = Entity::new((4, 21));
     assert_eq!(entity2.coordinates, (4, 21));
 
-    let entity3: Entity<()> = Entity::new_with_color((3, 3), Color::srgb(1.0, 0.0, 0.0));
-    assert_eq!(entity3.color, Color::srgb(1.0, 0.0, 0.0));
+    let entity3: Entity<()> = Entity::new_with_color((3, 3), palettes::basic::RED.into());
+    assert_eq!(entity3.color, palettes::basic::RED.into());
     assert_eq!(entity3.coordinates, (3, 3));
 
     let entity4: Entity<i32> = Entity::new_with_data((0, 0), 9);
